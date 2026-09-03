@@ -27,6 +27,12 @@ describe('Chinese locale runtime wiring', () => {
     expect(zhCn['portal.header.nav.roadmap']).not.toBe(en['portal.header.nav.roadmap'])
   })
 
+  it('loadMessages resolves the Polish catalog, not the English fallback', async () => {
+    const [en, pl] = await Promise.all([loadMessages('en'), loadMessages('pl')])
+    expect(pl['portal.header.nav.roadmap']).toBe('Roadmapa')
+    expect(pl['portal.header.nav.roadmap']).not.toBe(en['portal.header.nav.roadmap'])
+  })
+
   it('renders Chinese synchronously when SSR provides the catalog (no async wait)', async () => {
     const zhCn = await loadMessages('zh-cn')
     render(

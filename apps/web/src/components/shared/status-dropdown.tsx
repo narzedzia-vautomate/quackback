@@ -1,7 +1,9 @@
 import { useState } from 'react'
+import { useIntl } from 'react-intl'
 import { CheckIcon } from '@heroicons/react/24/solid'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { StatusBadge } from '@/components/ui/status-badge'
+import { localizedStatusName } from '@/lib/shared/localize-status'
 import { cn } from '@/lib/shared/utils'
 import type { PostStatusEntity } from '@/lib/shared/db-types'
 import type { PostStatusId } from '@quackback/ids'
@@ -28,6 +30,7 @@ export function StatusDropdown({
   disabled = false,
   variant = 'badge',
 }: StatusDropdownProps): React.ReactElement {
+  const intl = useIntl()
   const [open, setOpen] = useState(false)
 
   const handleStatusChange = (statusId: PostStatusId) => {
@@ -49,7 +52,12 @@ export function StatusDropdown({
             onClick={(e) => e.stopPropagation()}
           >
             {currentStatus ? (
-              <StatusBadge name={currentStatus.name} color={currentStatus.color} className="mb-1" />
+              <StatusBadge
+                name={currentStatus.name}
+                slug={currentStatus.slug}
+                color={currentStatus.color}
+                className="mb-1"
+              />
             ) : (
               <span className="text-[13px] text-muted-foreground">No status</span>
             )}
@@ -70,7 +78,9 @@ export function StatusDropdown({
               className="h-2 w-2 rounded-full shrink-0"
               style={{ backgroundColor: currentStatus?.color || '#94a3b8' }}
             />
-            <span className="max-w-[80px] truncate">{currentStatus?.name || 'No Status'}</span>
+            <span className="max-w-[80px] truncate">
+              {currentStatus ? localizedStatusName(intl, currentStatus) : 'No Status'}
+            </span>
           </button>
         )}
       </PopoverTrigger>
@@ -90,7 +100,7 @@ export function StatusDropdown({
               className="h-2 w-2 rounded-full shrink-0"
               style={{ backgroundColor: status.color }}
             />
-            <span className="flex-1 text-left truncate">{status.name}</span>
+            <span className="flex-1 text-left truncate">{localizedStatusName(intl, status)}</span>
             {status.id === currentStatus?.id && (
               <CheckIcon className="h-3.5 w-3.5 text-primary shrink-0" />
             )}

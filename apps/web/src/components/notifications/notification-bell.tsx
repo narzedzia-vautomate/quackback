@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { FormattedMessage, useIntl } from 'react-intl'
 import { BellIcon } from '@heroicons/react/24/outline'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -15,10 +16,26 @@ interface NotificationBellProps {
 }
 
 export function NotificationBell({ className, popoverSide = 'right' }: NotificationBellProps) {
+  const intl = useIntl()
   const [open, setOpen] = useState(false)
   const { data: unreadCount = 0 } = useUnreadCount()
   const [shouldPulse, setShouldPulse] = useState(false)
   const prevCountRef = useRef(unreadCount)
+
+  const notificationsLabel = intl.formatMessage({
+    id: 'portal.notifications.title',
+    defaultMessage: 'Notifications',
+  })
+  const ariaLabel =
+    unreadCount > 0
+      ? intl.formatMessage(
+          {
+            id: 'portal.notifications.bell.ariaUnread',
+            defaultMessage: 'Notifications ({count} unread)',
+          },
+          { count: unreadCount }
+        )
+      : notificationsLabel
 
   // Pulse animation when unread count increases
   useEffect(() => {
@@ -44,7 +61,7 @@ export function NotificationBell({ className, popoverSide = 'right' }: Notificat
                 'transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 className
               )}
-              aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ''}`}
+              aria-label={ariaLabel}
             >
               <BellIcon className="h-5 w-5" />
               {unreadCount > 0 && (
@@ -64,7 +81,7 @@ export function NotificationBell({ className, popoverSide = 'right' }: Notificat
           </PopoverTrigger>
         </TooltipTrigger>
         <TooltipContent side={isBottomAligned ? 'bottom' : 'right'} sideOffset={8}>
-          Notifications
+          <FormattedMessage id="portal.notifications.title" defaultMessage="Notifications" />
         </TooltipContent>
       </Tooltip>
       <PopoverContent

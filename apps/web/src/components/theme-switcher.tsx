@@ -1,15 +1,32 @@
 import { useEffect, useState } from 'react'
 import { useTheme } from 'next-themes'
+import { useIntl } from 'react-intl'
 import { ComputerDesktopIcon, MoonIcon, SunIcon } from '@heroicons/react/24/solid'
 import { cn } from '@/lib/shared/utils'
 
 const themes = [
-  { value: 'system', label: 'System', icon: ComputerDesktopIcon },
-  { value: 'light', label: 'Light', icon: SunIcon },
-  { value: 'dark', label: 'Dark', icon: MoonIcon },
+  {
+    value: 'system',
+    messageId: 'portal.header.theme.system',
+    defaultMessage: 'System',
+    icon: ComputerDesktopIcon,
+  },
+  {
+    value: 'light',
+    messageId: 'portal.header.theme.light',
+    defaultMessage: 'Light',
+    icon: SunIcon,
+  },
+  {
+    value: 'dark',
+    messageId: 'portal.header.theme.dark',
+    defaultMessage: 'Dark',
+    icon: MoonIcon,
+  },
 ] as const
 
 export function ThemeSwitcher() {
+  const intl = useIntl()
   const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
 
@@ -27,7 +44,9 @@ export function ThemeSwitcher() {
             className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border/50 bg-muted/30"
           >
             <t.icon className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">{t.label}</span>
+            <span className="text-sm text-muted-foreground">
+              {intl.formatMessage({ id: t.messageId, defaultMessage: t.defaultMessage })}
+            </span>
           </div>
         ))}
       </div>
@@ -50,7 +69,9 @@ export function ThemeSwitcher() {
             )}
           >
             <t.icon className="h-4 w-4" />
-            <span className="text-sm font-medium">{t.label}</span>
+            <span className="text-sm font-medium">
+              {intl.formatMessage({ id: t.messageId, defaultMessage: t.defaultMessage })}
+            </span>
           </button>
         )
       })}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useIntl } from 'react-intl'
 import QRCode from 'qrcode'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -22,6 +23,7 @@ export function TwoFactorEnrollSteps({
   onCancel: () => void
   onStepChange?: (step: 'qr' | 'backup') => void
 }): React.ReactElement {
+  const intl = useIntl()
   const [step, setStep] = useState<'loading' | 'qr' | 'backup'>('loading')
   const [code, setCode] = useState('')
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null)
@@ -35,7 +37,13 @@ export function TwoFactorEnrollSteps({
       const { data, error: betterErr } = await authClient.twoFactor.enable({ password })
       if (cancelled) return
       if (betterErr || !data) {
-        setError(betterErr?.message ?? 'Could not start 2FA setup.')
+        setError(
+          betterErr?.message ??
+            intl.formatMessage({
+              id: 'portal.settings.twoFactor.enroll.startError',
+              defaultMessage: 'Could not start 2FA setup.',
+            })
+        )
         return
       }
       // Re-check after the second await — without this, a QR render that
@@ -53,7 +61,7 @@ export function TwoFactorEnrollSteps({
     return () => {
       cancelled = true
     }
-  }, [password, onStepChange])
+  }, [password, onStepChange, intl])
 
   async function verifyCode(value: string) {
     if (pending) return
@@ -61,11 +69,26 @@ export function TwoFactorEnrollSteps({
     setPending(true)
     try {
       const { error: betterErr } = await authClient.twoFactor.verifyTotp({ code: value })
-      if (betterErr) throw new Error(betterErr.message ?? 'Code rejected.')
+      if (betterErr) {
+        throw new Error(
+          betterErr.message ??
+            intl.formatMessage({
+              id: 'portal.settings.twoFactor.enroll.codeRejected',
+              defaultMessage: 'Code rejected.',
+            })
+        )
+      }
       setStep('backup')
       onStepChange?.('backup')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Code rejected.')
+      setError(
+        err instanceof Error
+          ? err.message
+          : intl.formatMessage({
+              id: 'portal.settings.twoFactor.enroll.codeRejected',
+              defaultMessage: 'Code rejected.',
+            })
+      )
     } finally {
       setPending(false)
     }
@@ -80,11 +103,16 @@ export function TwoFactorEnrollSteps({
               <AlertDescription>{error}</AlertDescription>
             </Alert>
             <Button type="button" variant="ghost" onClick={onCancel}>
-              Cancel
+              {intl.formatMessage({ id: 'common.cancel', defaultMessage: 'Cancel' })}
             </Button>
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">Starting setup…</p>
+          <p className="text-sm text-muted-foreground">
+            {intl.formatMessage({
+              id: 'portal.settings.twoFactor.enroll.starting',
+              defaultMessage: 'Starting setup…',
+            })}
+          </p>
         )}
       </div>
     )
@@ -95,8 +123,11 @@ export function TwoFactorEnrollSteps({
       <div className="space-y-3">
         <Alert>
           <AlertDescription className="text-xs">
-            Save these one-time codes somewhere safe. Each can be used once if you lose access to
-            your authenticator.
+            {intl.formatMessage({
+              id: 'portal.settings.twoFactor.enroll.backupDescription',
+              defaultMessage:
+                'Save these one-time codes somewhere safe. Each can be used once if you lose access to your authenticator.',
+            })}
           </AlertDescription>
         </Alert>
         <pre className="rounded-md border border-border/50 bg-muted/30 p-3 text-xs font-mono columns-2">
@@ -107,10 +138,16 @@ export function TwoFactorEnrollSteps({
           size="sm"
           onClick={() => navigator.clipboard.writeText(backupCodes.join('\n'))}
         >
-          Copy all codes
+          {intl.formatMessage({
+            id: 'portal.settings.twoFactor.enroll.copyCodes',
+            defaultMessage: 'Copy all codes',
+          })}
         </Button>
         <Button className="w-full" onClick={onComplete}>
-          I have saved the codes
+          {intl.formatMessage({
+            id: 'portal.settings.twoFactor.enroll.savedCodes',
+            defaultMessage: 'I have saved the codes',
+          })}
         </Button>
       </div>
     )
@@ -127,13 +164,19 @@ export function TwoFactorEnrollSteps({
       {qrDataUrl && (
         <img
           src={qrDataUrl}
-          alt="TOTP QR code"
+          alt={intl.formatMessage({
+            id: 'portal.settings.twoFactor.enroll.qrAlt',
+            defaultMessage: 'TOTP QR code',
+          })}
           className="mx-auto h-44 w-44 bg-white p-2 rounded"
         />
       )}
       <p className="text-xs text-muted-foreground text-center">
-        Scan with Google Authenticator, 1Password, Authy, or any TOTP app, then enter the 6-digit
-        code.
+        {intl.formatMessage({
+          id: 'portal.settings.twoFactor.enroll.scanHint',
+          defaultMessage:
+            'Scan with Google Authenticator, 1Password, Authy, or any TOTP app, then enter the 6-digit code.',
+        })}
       </p>
       <div className="flex justify-center">
         <InputOTP
@@ -145,7 +188,10 @@ export function TwoFactorEnrollSteps({
           disabled={pending}
           autoFocus
           autoComplete="one-time-code"
-          aria-label="Authenticator code"
+          aria-label={intl.formatMessage({
+            id: 'portal.settings.twoFactor.enroll.codeAria',
+            defaultMessage: 'Authenticator code',
+          })}
           aria-invalid={!!error || undefined}
         >
           <InputOTPSixSlots />
@@ -158,10 +204,18 @@ export function TwoFactorEnrollSteps({
       )}
       <div className="flex gap-2">
         <Button type="button" variant="ghost" onClick={onCancel} disabled={pending}>
-          Cancel
+          {intl.formatMessage({ id: 'common.cancel', defaultMessage: 'Cancel' })}
         </Button>
         <Button type="submit" disabled={pending || code.length !== 6}>
-          {pending ? 'Verifying…' : 'Verify'}
+          {pending
+            ? intl.formatMessage({
+                id: 'portal.settings.twoFactor.enroll.verifying',
+                defaultMessage: 'Verifying…',
+              })
+            : intl.formatMessage({
+                id: 'portal.settings.twoFactor.enroll.verify',
+                defaultMessage: 'Verify',
+              })}
         </Button>
       </div>
     </form>

@@ -11,6 +11,7 @@ describe('documentLocale', () => {
   })
   it('localizes the standalone auth and widget routes', () => {
     expect(documentLocale(['__root__', '/auth/reset-password'], 'zh-cn')).toBe('zh-cn')
+    expect(documentLocale(['__root__', '/auth/auth-complete'], 'zh-cn')).toBe('zh-cn')
     expect(documentLocale(['__root__', '/widget'], 'ar')).toBe('ar')
   })
   it('keeps untranslated auth utility pages on the default locale', () => {
@@ -19,7 +20,6 @@ describe('documentLocale', () => {
     expect(documentLocale(['__root__', '/auth/login'], 'ar')).toBe('en')
     expect(documentLocale(['__root__', '/auth/signup'], 'zh-cn')).toBe('en')
     expect(documentLocale(['__root__', '/auth/two-factor'], 'ar')).toBe('en')
-    expect(documentLocale(['__root__', '/auth/auth-complete'], 'zh-cn')).toBe('en')
     expect(documentLocale(['__root__', '/auth/widget-handoff'], 'zh-tw')).toBe('en')
   })
   it('keeps the admin app (incl. its English-first login) and system routes on the default', () => {

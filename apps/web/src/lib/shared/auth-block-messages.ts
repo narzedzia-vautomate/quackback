@@ -106,3 +106,30 @@ export const AUTH_BLOCK_MESSAGES: Record<AuthBlockCode, string> = {
   handoff_failed:
     'That workspace handoff expired or was already used. Sign in here, or reopen the workspace from Quackback.',
 }
+
+/** react-intl catalog id for an AuthBlockCode (apostrophe stripped for the one BA code). */
+export function authBlockMessageId(code: AuthBlockCode): string {
+  if (code === "email_doesn't_match") return 'portal.auth.block.email_doesnt_match'
+  return `portal.auth.block.${code}`
+}
+
+type FormatMessage = (descriptor: { id: string; defaultMessage: string }) => string
+
+/** Client-side lookup: catalog translation with AUTH_BLOCK_MESSAGES as defaultMessage. */
+export function formatAuthBlockMessage(
+  formatMessage: FormatMessage,
+  code: string | undefined,
+  fallback: { id: string; defaultMessage: string } = {
+    id: 'portal.auth.error.generic',
+    defaultMessage: 'Something went wrong. Please try again.',
+  }
+): string {
+  if (code && Object.prototype.hasOwnProperty.call(AUTH_BLOCK_MESSAGES, code)) {
+    const typed = code as AuthBlockCode
+    return formatMessage({
+      id: authBlockMessageId(typed),
+      defaultMessage: AUTH_BLOCK_MESSAGES[typed],
+    })
+  }
+  return formatMessage(fallback)
+}

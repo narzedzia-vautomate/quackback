@@ -21,7 +21,10 @@ export function ensureStyles(side: 'left' | 'right'): void {
     // Long-form content (posts, articles, changelog entries) grows the panel.
     // Desktop-scoped: on mobile the panel is already full-screen, and this
     // higher-specificity rule would otherwise SHRINK it there.
-    '@media(min-width:640px){.quackback-panel.quackback-expanded{width:min(720px,calc(100vw - 48px));height:min(780px,calc(100vh - 48px))}}',
+    // Height must clear the fixed bottom:88px launcher offset PLUS a ~24px top
+    // inset (88+24=112). Using calc(100vh - 48px) ignored the bottom offset and
+    // pushed the panel 40px past the viewport top on short windows.
+    '@media(min-width:640px){.quackback-panel.quackback-expanded{width:min(720px,calc(100vw - 48px));height:min(780px,calc(100vh - 112px))}}',
     '.quackback-panel.quackback-open{opacity:1;transform:scale(1);pointer-events:auto}',
     '.quackback-panel.quackback-closing{opacity:0;transform:scale(0);pointer-events:none;',
     'transition:opacity 200ms cubic-bezier(0.4,0,1,1),transform 200ms cubic-bezier(0.4,0,1,1)}',

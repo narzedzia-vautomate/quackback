@@ -142,14 +142,17 @@ export function CreateChangelogDialog({ onChangelogCreated }: CreateChangelogDia
         </Button>
       </DialogTrigger>
       <DialogContent
-        className="w-[95vw] sm:w-[90vw] lg:max-w-5xl xl:max-w-6xl h-[85vh] p-0 gap-0 overflow-hidden flex flex-col"
+        className="w-[95vw] sm:w-[90vw] lg:max-w-5xl xl:max-w-6xl h-[85vh] p-0 gap-0 flex flex-col overflow-visible"
         onKeyDown={handleKeyDown}
         showCloseButton={false}
       >
         <DialogTitle className="sr-only">Create changelog entry</DialogTitle>
 
         <Form {...form}>
-          <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          {/* overflow-hidden stays on the form so rounded corners clip the
+              editor/sidebar, while Popovers portaled into DialogContent can
+              escape (StatusSelect etc. were getting cut by Dialog overflow). */}
+          <form onSubmit={handleSubmit} className="flex flex-col h-full min-h-0 overflow-hidden rounded-[inherit]">
             {/* Main content area - 2 column layout on desktop */}
             <div className="flex flex-1 min-h-0">
               {/* Left: Content editor */}

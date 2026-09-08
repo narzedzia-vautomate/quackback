@@ -1,9 +1,13 @@
 import type { ReactElement } from 'react'
+import { useIntl } from 'react-intl'
 
+import { localizedStatusName } from '@/lib/shared/localize-status'
 import { cn } from '@/lib/shared/utils'
 
 interface StatusBadgeProps {
   name: string
+  /** When set (or when `name` matches a seeded English default), label is localized. */
+  slug?: string | null
   color?: string | null
   className?: string
 }
@@ -12,7 +16,9 @@ interface StatusBadgeProps {
  * Status indicator displaying a colored dot with text.
  * Falls back to muted styling when no color is provided.
  */
-export function StatusBadge({ name, color, className }: StatusBadgeProps): ReactElement {
+export function StatusBadge({ name, slug, color, className }: StatusBadgeProps): ReactElement {
+  const intl = useIntl()
+  const label = localizedStatusName(intl, { slug, name })
   const dotStyles = color ? { backgroundColor: color } : undefined
 
   return (
@@ -28,7 +34,7 @@ export function StatusBadge({ name, color, className }: StatusBadgeProps): React
         style={dotStyles}
         aria-hidden="true"
       />
-      {name}
+      {label}
     </span>
   )
 }

@@ -294,7 +294,12 @@ export function PostCard({
         variant="badge"
       />
     ) : currentStatus ? (
-      <StatusBadge name={currentStatus.name} color={currentStatus.color} className="mb-1" />
+      <StatusBadge
+        name={currentStatus.name}
+        slug={currentStatus.slug}
+        color={currentStatus.color}
+        className="mb-1"
+      />
     ) : null
 
   // Admin quick actions (status dropdown button + more actions)

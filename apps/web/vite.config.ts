@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'path'
 import { execSync } from 'child_process'
 import { readFileSync } from 'fs'
-import { CLIENT_PROTECTED_SPECIFIERS } from './src/lib/server/policy/client-import-protection'
+import { CLIENT_PROTECTED_SPECIFIERS } from './src/lib/server/policy/client-import-protection.ts'
 
 /**
  * Replace the server-only structured logger with a no-op stub in the CLIENT
@@ -16,7 +16,7 @@ import { CLIENT_PROTECTED_SPECIFIERS } from './src/lib/server/policy/client-impo
  * keep the real logger.
  */
 function stubServerLoggerInClient(): PluginOption {
-  const stub = path.resolve(__dirname, 'src/lib/server/logger.client-stub.ts')
+  const stub = path.resolve(import.meta.dirname, 'src/lib/server/logger.client-stub.ts')
   return {
     name: 'quackback:stub-server-logger-in-client',
     enforce: 'pre',
@@ -92,8 +92,51 @@ function keepSsrOnlyDepsOutOfClientOptimizer(): PluginOption {
   }
 }
 
+/**
+ * Dev only: Vite's static middleware answers `/api/widget/sdk.js` with
+ * `Cannot GET` before TanStack/Nitro can handle the route — and rewriting to
+ * `sdk%2Ejs` still races Nitro during dep-optimize (503 / wedged HTTP).
+ * Serve the prebuilt widget bundle straight from disk so embeds work without
+ * SSR. Production Bun/Nitro keeps `sdk[.]js.ts`.
+ */
+function serveWidgetSdkJsInDev(): PluginOption {
+  const bundlePath = path.resolve(import.meta.dirname, '../../packages/widget/dist/browser.js')
+  return {
+    name: 'quackback:serve-widget-sdk-js-dev',
+    apply: 'serve',
+    configureServer(server) {
+      // Register synchronously so we run before Vite's static middleware.
+      server.middlewares.use((req, res, next) => {
+        const pathname = (req.url ?? '').split('?')[0] ?? ''
+        const isSdk =
+          pathname === '/api/widget/sdk.js' ||
+          pathname === '/api/widget/sdk%2Ejs' ||
+          pathname === '/api/widget/sdk%2ejs'
+        if (!isSdk) return next()
+
+        try {
+          const baseUrl = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
+          const bundle = readFileSync(bundlePath, 'utf-8')
+          // Minimal prelude — full theme/tabs come from the real route in prod.
+          const body =
+            `window.__QUACKBACK_URL__=${JSON.stringify(baseUrl)};` +
+            `window.__QUACKBACK_CONFIG__=${JSON.stringify({})};` +
+            bundle
+          res.statusCode = 200
+          res.setHeader('Content-Type', 'application/javascript; charset=utf-8')
+          res.setHeader('Access-Control-Allow-Origin', '*')
+          res.setHeader('Cache-Control', 'no-store')
+          res.end(body)
+        } catch (err) {
+          next(err)
+        }
+      })
+    },
+  }
+}
+
 function getBuildInfo() {
-  const pkg = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'))
+  const pkg = JSON.parse(readFileSync(path.resolve(import.meta.dirname, 'package.json'), 'utf-8'))
   let gitCommit = 'unknown'
   try {
     gitCommit = execSync('git rev-parse --short HEAD', { encoding: 'utf-8' }).trim()
@@ -109,7 +152,7 @@ function getBuildInfo() {
 
 export default defineConfig(({ mode }) => {
   // Load env from monorepo root where .env file lives
-  loadEnv(mode, path.resolve(__dirname, '../../'), '')
+  loadEnv(mode, path.resolve(import.meta.dirname, '../../'), '')
 
   const buildInfo = getBuildInfo()
 
@@ -154,6 +197,7 @@ export default defineConfig(({ mode }) => {
       tsconfigPaths: true,
     },
     plugins: [
+      serveWidgetSdkJsInDev(),
       keepSsrOnlyDepsOutOfClientOptimizer(),
       stubServerLoggerInClient(),
       tailwindcss(),

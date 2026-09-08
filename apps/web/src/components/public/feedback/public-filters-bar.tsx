@@ -34,6 +34,7 @@ import type { PublicFeedbackFilters } from '@/lib/shared/types'
 import type { PostStatusEntity, PostTag } from '@/lib/shared/db-types'
 import { toggleItem } from '@/components/shared/filter-utils'
 import { CircleIcon } from '@/components/shared/filter-menu'
+import { localizedStatusName } from '@/lib/shared/localize-status'
 import {
   VOTE_THRESHOLDS,
   DATE_PRESETS,
@@ -453,7 +454,7 @@ function AddFilterButton({
                         {list.map((status) => (
                           <CommandItem
                             key={status.id}
-                            value={status.name}
+                            value={localizedStatusName(intl, status)}
                             onSelect={() => {
                               setFilters({ status: toggleItem(filters.status, status.slug) })
                               closePopover()
@@ -463,7 +464,7 @@ function AddFilterButton({
                               className="h-2 w-2 rounded-full shrink-0"
                               style={{ backgroundColor: status.color }}
                             />
-                            {status.name}
+                            {localizedStatusName(intl, status)}
                           </CommandItem>
                         ))}
                       </CommandGroup>
@@ -655,7 +656,7 @@ function buildActiveChips(args: {
 
   const statusOptions: FilterOption[] = statuses.map((s) => ({
     id: s.slug,
-    label: s.name,
+    label: localizedStatusName(intl, s),
     color: s.color,
   }))
 
@@ -671,7 +672,7 @@ function buildActiveChips(args: {
           id: 'portal.feedback.filter.chip.status',
           defaultMessage: 'Status:',
         }),
-        value: status.name,
+        value: localizedStatusName(intl, status),
         valueId: slug,
         color: status.color,
         options: statusOptions,

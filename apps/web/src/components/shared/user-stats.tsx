@@ -1,6 +1,8 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { FormattedMessage } from 'react-intl'
 import { getUserStatsFn } from '@/lib/server/functions/user'
 import { cn } from '@/lib/shared/utils'
 
@@ -10,7 +12,7 @@ function StatItem({
   compact,
 }: {
   value: number | undefined
-  label: string
+  label: ReactNode
   compact?: boolean
 }) {
   return (
@@ -47,9 +49,21 @@ export function UserStatsBar({ compact, className, headers }: UserStatsBarProps)
 
   return (
     <div className={cn('grid grid-cols-3 gap-1', className)}>
-      <StatItem value={data?.ideas} label="Ideas" compact={compact} />
-      <StatItem value={data?.votes} label="Votes" compact={compact} />
-      <StatItem value={data?.comments} label="Comments" compact={compact} />
+      <StatItem
+        value={data?.ideas}
+        label={<FormattedMessage id="portal.userStats.ideas" defaultMessage="Ideas" />}
+        compact={compact}
+      />
+      <StatItem
+        value={data?.votes}
+        label={<FormattedMessage id="portal.userStats.votes" defaultMessage="Votes" />}
+        compact={compact}
+      />
+      <StatItem
+        value={data?.comments}
+        label={<FormattedMessage id="portal.userStats.comments" defaultMessage="Comments" />}
+        compact={compact}
+      />
     </div>
   )
 }

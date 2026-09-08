@@ -6,6 +6,7 @@ import type { ChangelogId, PostId } from '@quackback/ids'
 import type { JSONContent } from '@tiptap/react'
 import type { TiptapContent } from '@/lib/shared/db-types'
 import { cn } from '@/lib/shared/utils'
+import { PublishedAt } from './published-at'
 
 interface LinkedPost {
   id: PostId
@@ -35,14 +36,6 @@ interface ChangelogEntryCardProps {
   className?: string
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 export function ChangelogEntryCard({
   id,
   title,
@@ -58,7 +51,7 @@ export function ChangelogEntryCard({
       {/* Date sidebar */}
       <div className="hidden md:block w-40 shrink-0 pt-1">
         <time dateTime={publishedAt} className="text-sm text-muted-foreground">
-          {formatDate(publishedAt)}
+          <PublishedAt value={publishedAt} />
         </time>
       </div>
 
@@ -66,7 +59,7 @@ export function ChangelogEntryCard({
       <div className="flex-1 min-w-0">
         {/* Mobile date */}
         <time dateTime={publishedAt} className="md:hidden text-sm text-muted-foreground mb-4 block">
-          {formatDate(publishedAt)}
+          <PublishedAt value={publishedAt} />
         </time>
 
         {/* Category labels */}

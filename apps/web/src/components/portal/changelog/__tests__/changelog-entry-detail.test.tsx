@@ -1,6 +1,7 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { IntlProvider } from 'react-intl'
 import type { ChangelogId } from '@quackback/ids'
 
 // BackLink renders a router Link; the detail layout is under test here, not
@@ -20,17 +21,36 @@ const baseProps = {
   linkedPosts: [],
 }
 
+function renderDetail(
+  props: Partial<typeof baseProps> & { featuredImageUrl: string | null },
+  locale = 'en',
+) {
+  return render(
+    <IntlProvider locale={locale} messages={{}}>
+      <ChangelogEntryDetail {...baseProps} {...props} />
+    </IntlProvider>,
+  )
+}
+
 describe('ChangelogEntryDetail featured image', () => {
   it('renders the featured image above the title when one is set', () => {
-    render(<ChangelogEntryDetail {...baseProps} featuredImageUrl="/uploads/changelog/hero.png" />)
+    renderDetail({ featuredImageUrl: '/uploads/changelog/hero.png' })
 
     const image = screen.getByRole('img', { name: 'Dashboards 2.0' })
     expect(image).toHaveAttribute('src', '/uploads/changelog/hero.png')
   })
 
   it('renders no image when the entry has no featured image', () => {
-    render(<ChangelogEntryDetail {...baseProps} featuredImageUrl={null} />)
+    renderDetail({ featuredImageUrl: null })
 
     expect(screen.queryByRole('img')).not.toBeInTheDocument()
+  })
+
+  it('localizes the published date to the active Intl locale', () => {
+    renderDetail({ featuredImageUrl: null }, 'pl')
+
+    // Desktop + mobile <time> both render the same label.
+    const dates = screen.getAllByText(/lipca|1 lipca/i)
+    expect(dates.length).toBeGreaterThan(0)
   })
 })

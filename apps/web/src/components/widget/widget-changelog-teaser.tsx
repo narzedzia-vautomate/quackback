@@ -1,15 +1,7 @@
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { FormattedMessage } from 'react-intl'
+import { FormattedDate, FormattedMessage } from 'react-intl'
 import { contentPreview } from '@/lib/shared/utils/string'
 import { publicChangelogQueries } from '@/lib/client/queries/changelog'
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
 
 interface WidgetChangelogTeaserProps {
   /** Open a single changelog entry (changelog-detail view). */
@@ -49,8 +41,16 @@ export function WidgetChangelogTeaser({ onOpenEntry, onSeeAll }: WidgetChangelog
         onClick={() => onOpenEntry(latest.id)}
         className="w-full rounded-xl px-2 py-2 text-start transition-colors hover:bg-accent"
       >
-        <time className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide">
-          {formatDate(latest.publishedAt)}
+        <time
+          dateTime={latest.publishedAt}
+          className="text-[11px] font-medium text-muted-foreground/60 uppercase tracking-wide"
+        >
+          <FormattedDate
+            value={latest.publishedAt}
+            month="short"
+            day="numeric"
+            year="numeric"
+          />
         </time>
         <h3 className="mt-0.5 text-sm font-semibold text-foreground line-clamp-1 leading-snug">
           {latest.title}

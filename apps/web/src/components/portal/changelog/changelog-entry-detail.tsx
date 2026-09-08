@@ -7,6 +7,7 @@ import { ChevronUpIcon } from '@heroicons/react/24/outline'
 import type { ChangelogId, PostId } from '@quackback/ids'
 import type { JSONContent } from '@tiptap/react'
 import type { TiptapContent } from '@/lib/shared/db-types'
+import { PublishedAt } from './published-at'
 
 interface LinkedPost {
   id: PostId
@@ -36,14 +37,6 @@ interface ChangelogEntryDetailProps {
   categories?: CategoryBadge[]
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  })
-}
-
 export function ChangelogEntryDetail({
   title,
   content,
@@ -64,7 +57,7 @@ export function ChangelogEntryDetail({
         {/* Date sidebar */}
         <div className="hidden md:block w-40 shrink-0 pt-1">
           <time dateTime={publishedAt} className="text-sm text-muted-foreground">
-            {formatDate(publishedAt)}
+            <PublishedAt value={publishedAt} />
           </time>
         </div>
 
@@ -75,7 +68,7 @@ export function ChangelogEntryDetail({
             dateTime={publishedAt}
             className="md:hidden text-sm text-muted-foreground mb-4 block"
           >
-            {formatDate(publishedAt)}
+            <PublishedAt value={publishedAt} />
           </time>
 
           {/* Category labels */}

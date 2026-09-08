@@ -136,7 +136,7 @@ export function StatusSelect({ value, options, onChange, disabled = false }: Sta
           {currentOption?.label}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-44 p-1">
+      <PopoverContent align="end" collisionPadding={8} className="w-44 p-1">
         {options.map((option) => (
           <button
             key={option.value}
@@ -152,7 +152,7 @@ export function StatusSelect({ value, options, onChange, disabled = false }: Sta
               className="h-2 w-2 rounded-full shrink-0"
               style={{ backgroundColor: option.color }}
             />
-            <span className="flex-1 text-left truncate">{option.label}</span>
+            <span className="flex-1 text-left">{option.label}</span>
             {value === option.value && <CheckIcon className="h-3.5 w-3.5 text-primary shrink-0" />}
           </button>
         ))}

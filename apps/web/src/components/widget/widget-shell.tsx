@@ -256,7 +256,7 @@ export function WidgetShell({
       {/* The Home hero backdrop fills the panel behind the header row and
           body; the header/content render transparently over it. */}
       {backdrop}
-      <div className="relative z-10 flex items-center justify-between gap-2 px-4 py-3 shrink-0">
+      <div className="relative z-20 flex items-center justify-between gap-2 px-4 py-3 shrink-0">
         {/* Left: back button on detail views; workspace logo on Home. min-w-0 so
             header content (presence copy) truncates instead of pushing the
             right-zone controls. */}
@@ -540,7 +540,7 @@ function UserAvatarPopover({
       </button>
 
       {open && (
-        <div className="absolute end-0 top-full mt-1.5 z-50 w-56 rounded-lg border border-border bg-card shadow-lg">
+        <div className="absolute end-0 top-full mt-1.5 z-[60] w-56 rounded-lg border border-border bg-card shadow-lg overflow-hidden">
           <div className="px-3 py-3">
             <div className="flex items-center gap-2.5">
               <Avatar src={user.avatarUrl} name={user.name} className="size-9 text-sm" />

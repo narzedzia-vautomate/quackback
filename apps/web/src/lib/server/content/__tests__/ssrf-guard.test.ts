@@ -224,6 +224,32 @@ describe('checkUrlSafety', () => {
     const result = await checkUrlSafety('https://empty.example/')
     expect(result).toEqual({ safe: false, reason: 'dns-error' })
   })
+
+  it('allowlisted host.docker.internal falls back to 127.0.0.1 when DNS fails', async () => {
+    vi.stubEnv('SSRF_ALLOWLIST_HOSTS', 'localhost,127.0.0.1,host.docker.internal')
+    lookupMock.mockRejectedValueOnce(new Error('ENOTFOUND'))
+    const result = await checkUrlSafety('http://host.docker.internal:8002/api/v1/oauth/token')
+    expect(result).toEqual({ safe: true, address: '127.0.0.1', family: 4 })
+  })
+
+  it('allowlisted host still uses DNS when it resolves', async () => {
+    vi.stubEnv('SSRF_ALLOWLIST_HOSTS', 'host.docker.internal')
+    lookupMock.mockResolvedValueOnce([{ address: '192.168.65.254', family: 4 }])
+    const result = await checkUrlSafety('http://host.docker.internal:8002/token')
+    expect(result).toEqual({ safe: true, address: '192.168.65.254', family: 4 })
+  })
+
+  it('allowlisted localhost prefers IPv4 when DNS returns ::1 first', async () => {
+    vi.stubEnv('SSRF_ALLOWLIST_HOSTS', 'localhost,127.0.0.1')
+    lookupMock.mockResolvedValueOnce([
+      { address: '::1', family: 6 },
+      { address: '127.0.0.1', family: 4 },
+    ])
+    const result = await checkUrlSafety(
+      'http://localhost:8002/api/v1/oauth/.well-known/openid-configuration'
+    )
+    expect(result).toEqual({ safe: true, address: '127.0.0.1', family: 4 })
+  })
 })
 
 describe('safeFetch', () => {

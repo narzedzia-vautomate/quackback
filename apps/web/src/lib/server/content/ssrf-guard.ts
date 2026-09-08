@@ -156,6 +156,19 @@ export type UrlSafetyResult =
   | { safe: false; reason: 'scheme-rejected' | 'ssrf-rejected' | 'dns-error' }
 
 /**
+ * When an allowlisted hostname cannot be resolved (e.g. `host.docker.internal`
+ * outside Docker Desktop), pin token/discovery fetches to loopback.
+ * Only consulted for hosts already present in `SSRF_ALLOWLIST_HOSTS`.
+ */
+const LOOPBACK_ALLOWLIST_FALLBACK: Record<string, { address: string; family: 4 | 6 }> = {
+  localhost: { address: '127.0.0.1', family: 4 },
+  '127.0.0.1': { address: '127.0.0.1', family: 4 },
+  'host.docker.internal': { address: '127.0.0.1', family: 4 },
+  '::1': { address: '::1', family: 6 },
+  '[::1]': { address: '::1', family: 6 },
+}
+
+/**
  * Check that a URL is safe to fetch from the server.
  *
  * On success, returns the first public address that was resolved — the
@@ -178,18 +191,30 @@ export async function checkUrlSafety(url: string): Promise<UrlSafetyResult> {
     .split(',')
     .map((h) => h.trim().toLowerCase())
     .filter(Boolean)
-  if (allowlist.includes(parsed.hostname.toLowerCase())) {
+  const hostname = parsed.hostname.toLowerCase()
+  if (allowlist.includes(hostname)) {
     // Still resolve so callers get a pin address, but skip the private-IP reject.
+    // When DNS fails (common for `host.docker.internal` on a host-run Vite
+    // process), pin known loopback aliases to 127.0.0.1 so local IdP token
+    // exchange still works in source-mode / non-Docker runtimes.
     let addresses: Array<{ address: string; family: number }>
     try {
       addresses = await lookup(parsed.hostname, { all: true })
     } catch {
-      return { safe: false, reason: 'dns-error' }
+      addresses = []
     }
     if (addresses.length === 0) {
-      return { safe: false, reason: 'dns-error' }
+      const fallback = LOOPBACK_ALLOWLIST_FALLBACK[hostname]
+      if (!fallback) {
+        return { safe: false, reason: 'dns-error' }
+      }
+      return { safe: true, address: fallback.address, family: fallback.family }
     }
-    const pinned = addresses[0]
+    // Prefer IPv4 when both families resolve. On macOS, `localhost` often
+    // returns [::1, 127.0.0.1] while local IdPs (uvicorn) only bind IPv4 —
+    // pinning ::1 then fails with ECONNREFUSED and surfaces as
+    // discovery-unreachable.
+    const pinned = addresses.find((a) => a.family === 4) ?? addresses[0]
     return {
       safe: true,
       address: pinned.address,

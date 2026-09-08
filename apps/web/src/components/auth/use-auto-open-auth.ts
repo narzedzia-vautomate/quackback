@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react'
 import { useRouter } from '@tanstack/react-router'
+import { useIntl } from 'react-intl'
 import { toast } from 'sonner'
 import { useAuthPopoverSafe } from '@/components/auth/auth-popover-context'
-import { AUTH_BLOCK_MESSAGES } from '@/lib/server/auth/redirect-errors'
+import { formatAuthBlockMessage } from '@/lib/shared/auth-block-messages'
 import { navigateAfterAuth } from '@/lib/client/post-auth-navigation'
 import { takeSsoAttempt } from '@/lib/client/sso-attempt-stash'
 
@@ -23,6 +24,7 @@ export function useAutoOpenAuthDialog(args: {
 }): void {
   const popover = useAuthPopoverSafe()
   const router = useRouter()
+  const intl = useIntl()
   // Separate refs so an error toast doesn't suppress the open path and
   // vice versa — they are independent one-shot side effects.
   const opened = useRef(false)
@@ -36,8 +38,11 @@ export function useAutoOpenAuthDialog(args: {
     if (!errorToasted.current && args.error && !isLinkConflict) {
       errorToasted.current = true
       toast.error(
-        AUTH_BLOCK_MESSAGES[args.error as keyof typeof AUTH_BLOCK_MESSAGES] ??
-          'Sign-in failed. Try again or contact your administrator if the problem persists.'
+        formatAuthBlockMessage(intl.formatMessage, args.error, {
+          id: 'portal.auth.error.authFailed',
+          defaultMessage:
+            'Sign-in failed. Try again or contact your administrator if the problem persists.',
+        })
       )
     }
 
@@ -65,5 +70,5 @@ export function useAutoOpenAuthDialog(args: {
             navigateAfterAuth(args.callbackUrl!, () => router.navigate({ to: args.callbackUrl! }))
         : undefined,
     })
-  }, [args.mode, args.callbackUrl, args.error, args.isAuthenticated, popover, router])
+  }, [args.mode, args.callbackUrl, args.error, args.isAuthenticated, popover, router, intl])
 }

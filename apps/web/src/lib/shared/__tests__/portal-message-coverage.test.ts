@@ -22,9 +22,19 @@ const PORTAL_SOURCE_ROOTS = [
   'components/public',
   'components/help-center',
   'components/shared/conversation',
+  'components/settings',
+  'components/notifications',
 ]
 
-const PORTAL_SOURCE_FILES = ['routes/auth.recovery.tsx', 'routes/auth.reset-password.tsx']
+const PORTAL_SOURCE_FILES = [
+  'routes/auth.recovery.tsx',
+  'routes/auth.reset-password.tsx',
+  'routes/auth.auth-complete.tsx',
+  'components/auth/two-factor-enroll-steps.tsx',
+  'components/auth/use-auto-open-auth.ts',
+  'components/auth/portal-auth-form-inline.tsx',
+  'components/theme-switcher.tsx',
+]
 
 function walk(dir: string): string[] {
   const out: string[] = []

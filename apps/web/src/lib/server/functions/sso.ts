@@ -24,7 +24,7 @@ import { getRequestHeaders } from '@tanstack/react-start/server'
 import { z } from 'zod'
 import type { IdentityProviderId } from '@quackback/ids'
 import { ConflictError, ForbiddenError, ValidationError } from '@/lib/shared/errors'
-import { httpsUrl } from '@/lib/shared/schemas/auth'
+import { oidcEndpointUrl } from '@/lib/shared/schemas/auth'
 import { actorFromAuth, withAuditEvent } from '@/lib/server/audit/log'
 import { PERMISSIONS } from '@/lib/shared/permissions'
 import { diffProviderAudit } from '@/lib/server/auth/idp-audit-diff'
@@ -211,12 +211,12 @@ const upsertIdentityProviderInput = z.object({
   // and label render; does not affect Better-Auth registration.
   kind: z.enum(['okta', 'auth0', 'keycloak', 'entra', 'google', 'other']).nullable().optional(),
   clientId: z.string().min(1).max(512),
-  discoveryUrl: httpsUrl.nullable().optional(),
-  authorizationUrl: httpsUrl.nullable().optional(),
-  tokenUrl: httpsUrl.nullable().optional(),
-  userInfoUrl: httpsUrl.nullable().optional(),
-  jwksUri: httpsUrl.nullable().optional(),
-  issuer: httpsUrl.nullable().optional(),
+  discoveryUrl: oidcEndpointUrl.nullable().optional(),
+  authorizationUrl: oidcEndpointUrl.nullable().optional(),
+  tokenUrl: oidcEndpointUrl.nullable().optional(),
+  userInfoUrl: oidcEndpointUrl.nullable().optional(),
+  jwksUri: oidcEndpointUrl.nullable().optional(),
+  issuer: oidcEndpointUrl.nullable().optional(),
   scopes: z.string().max(512).nullable().optional(),
   prompt: z.string().max(64).nullable().optional(),
   tokenEndpointAuthMethod: z.string().max(32).nullable().optional(),
@@ -572,7 +572,7 @@ export const setDomainEnforcedFn = createServerFn({ method: 'POST' })
  * RECOMMENDED, not required.
  */
 export const fetchDiscoveryScopesFn = createServerFn({ method: 'POST' })
-  .validator(z.object({ discoveryUrl: httpsUrl }))
+  .validator(z.object({ discoveryUrl: oidcEndpointUrl }))
   .handler(async ({ data }): Promise<{ scopesSupported: string[] | null }> => {
     await requireAuth({ permission: PERMISSIONS.AUTH_MANAGE })
     try {

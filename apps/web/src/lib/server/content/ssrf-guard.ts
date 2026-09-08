@@ -172,6 +172,31 @@ export async function checkUrlSafety(url: string): Promise<UrlSafetyResult> {
   } catch {
     return { safe: false, reason: 'scheme-rejected' }
   }
+  // Hostname allow-list for self-hosted IdPs on loopback/private networks.
+  // Comma-separated hostnames from SSRF_ALLOWLIST_HOSTS.
+  const allowlist = (process.env.SSRF_ALLOWLIST_HOSTS || '')
+    .split(',')
+    .map((h) => h.trim().toLowerCase())
+    .filter(Boolean)
+  if (allowlist.includes(parsed.hostname.toLowerCase())) {
+    // Still resolve so callers get a pin address, but skip the private-IP reject.
+    let addresses: Array<{ address: string; family: number }>
+    try {
+      addresses = await lookup(parsed.hostname, { all: true })
+    } catch {
+      return { safe: false, reason: 'dns-error' }
+    }
+    if (addresses.length === 0) {
+      return { safe: false, reason: 'dns-error' }
+    }
+    const pinned = addresses[0]
+    return {
+      safe: true,
+      address: pinned.address,
+      family: pinned.family === 6 ? 6 : 4,
+    }
+  }
+
   let addresses: Array<{ address: string; family: number }>
   try {
     addresses = await lookup(parsed.hostname, { all: true })

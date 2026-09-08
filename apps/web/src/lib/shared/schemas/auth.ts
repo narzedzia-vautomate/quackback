@@ -34,3 +34,31 @@ export const httpsUrl = z
     },
     { message: 'must be an https:// URL' }
   )
+
+/** Loopback hosts allowed over http:// for local IdP / Quackback ↔ Ofertator SSO. */
+const LOOPBACK_OIDC_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '[::1]',
+  '::1',
+  'host.docker.internal',
+])
+
+function isHttpsOrLoopbackHttp(v: string): boolean {
+  try {
+    const u = new URL(v)
+    if (u.protocol === 'https:') return true
+    if (u.protocol === 'http:' && LOOPBACK_OIDC_HOSTS.has(u.hostname)) return true
+    return false
+  } catch {
+    return false
+  }
+}
+
+/**
+ * OIDC endpoint URL: https everywhere, plus http:// on loopback for local
+ * IdP setups (e.g. Ofertator on localhost:8002). Webhooks keep `httpsUrl`.
+ */
+export const oidcEndpointUrl = z.string().url().refine(isHttpsOrLoopbackHttp, {
+  message: 'must be an https:// URL (http:// allowed for localhost only)',
+})

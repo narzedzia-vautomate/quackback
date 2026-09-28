@@ -35,7 +35,7 @@ export const httpsUrl = z
     { message: 'must be an https:// URL' }
   )
 
-/** Loopback hosts allowed over http:// for local IdP / Quackback ↔ Ofertator SSO. */
+/** Loopback hosts allowed over http:// for local IdP ↔ Quackback SSO. */
 const LOOPBACK_OIDC_HOSTS = new Set([
   'localhost',
   '127.0.0.1',
@@ -57,7 +57,7 @@ function isHttpsOrLoopbackHttp(v: string): boolean {
 
 /**
  * OIDC endpoint URL: https everywhere, plus http:// on loopback for local
- * IdP setups (e.g. Ofertator on localhost:8002). Webhooks keep `httpsUrl`.
+ * IdP setups (e.g. a host app OAuth server on localhost). Webhooks keep `httpsUrl`.
  */
 export const oidcEndpointUrl = z.string().url().refine(isHttpsOrLoopbackHttp, {
   message: 'must be an https:// URL (http:// allowed for localhost only)',

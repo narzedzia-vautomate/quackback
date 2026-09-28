@@ -1178,6 +1178,11 @@ export async function handleSignInSuccessAudit(ctx: {
  * claim so the next sign-in re-fires the alert rather than losing
  * it to a transient SMTP outage. All errors swallowed — Redis/SMTP
  * outages must not break sign-in.
+ *
+ * OIDC / social callbacks skip the **email**: the external IdP already
+ * authenticated the visitor, and a Quackback-branded “new sign-in” mail
+ * reads as a second product. Audit + device tracking still run.
+ * Password / magic-link sign-ins keep the alert.
  */
 export async function handleNewDeviceNotification(
   ctx: {
@@ -1206,6 +1211,9 @@ export async function handleNewDeviceNotification(
   const unseen = await isDeviceUnseen(userId, fingerprint).catch(() => false)
   if (!unseen) return
 
+  // External IdP / social callback: skip customer email; keep audit trail.
+  const skipEmail = SESSION_CREATING_CALLBACK_PATHS.has(ctx.path ?? '')
+
   // Email + audit are independent — fire in parallel. TTL refresh
   // runs only on full success so a failure can roll back via
   // `forgetDevice` and re-fire on the next sign-in.
@@ -1219,8 +1227,8 @@ export async function handleNewDeviceNotification(
     // one an agent typed into the inbox. An account with no deliverable address
     // simply does not get the alert. The audit row and markDeviceSeen still run,
     // or every subsequent sign-in would retry a send that can never succeed.
-    const to = await resolveAccountRecipient(userId as UserId)
-    if (!to) {
+    const to = skipEmail ? null : await resolveAccountRecipient(userId as UserId)
+    if (!skipEmail && !to) {
       log.warn({ user_id: userId }, 'new-device alert skipped: no deliverable account address')
     }
     await Promise.all([
@@ -1239,7 +1247,7 @@ export async function handleNewDeviceNotification(
         outcome: 'success',
         actor: { userId: userId as `user_${string}`, email },
         headers,
-        metadata: { ip, userAgent },
+        metadata: { ip, userAgent, emailSkipped: skipEmail || undefined },
       }),
     ])
     await markDeviceSeen(userId)
@@ -1361,7 +1369,8 @@ export const hooksAfter = createAuthMiddleware(async (ctx) => {
   // Geo-IP country from CDN headers; written best-effort, never blocks.
   await handleCountryCapture(ctx as Parameters<typeof handleCountryCapture>[0])
   // Fires only when a new device fingerprint (UA + /24) for this user
-  // is observed; default-on but workspace can opt out.
+  // is observed. OIDC/social callbacks skip the customer email (external
+  // IdP already authenticated them) but still audit + track the device.
   await handleNewDeviceNotification(
     ctx as Parameters<typeof handleNewDeviceNotification>[0],
     workspace

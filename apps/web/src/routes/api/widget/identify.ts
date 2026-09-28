@@ -268,6 +268,12 @@ export const Route = createFileRoute('/api/widget/identify')({
           }
 
           const updates: Record<string, unknown> = {}
+          // Verified ssoToken proves inbox ownership via the host backend —
+          // promote unverified rows so portal OIDC can auto-link (otherwise
+          // Better Auth returns account_not_linked and demands magic-link).
+          if (!userRecord.emailVerified) {
+            updates.emailVerified = true
+          }
           if (identified.name && identified.name !== userRecord.name) updates.name = identified.name
           if (identified.avatarURL && identified.avatarURL !== userRecord.image)
             updates.image = identified.avatarURL
@@ -313,7 +319,10 @@ export const Route = createFileRoute('/api/widget/identify')({
               // index-eligible and the "one email per account" invariant
               // holds across mixed-case identify calls.
               email: normalizedEmail,
-              emailVerified: false,
+              // Host-signed ssoToken is verified-only (see identifySchema /
+              // GH #300) — treat the email as verified so portal SSO can
+              // auto-link without magic-link recovery.
+              emailVerified: true,
               image: identified.avatarURL ?? null,
               metadata: hasAttrs ? JSON.stringify(validAttrs) : null,
               country: country ?? null,

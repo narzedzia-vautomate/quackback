@@ -45,12 +45,18 @@ vi.mock('@/lib/server/db', async (orig) => {
   }
 })
 
+vi.mock('@/lib/server/email/recipient', () => ({
+  resolveAccountRecipient: vi.fn(async () => 'a@b.com'),
+}))
+
 vi.mock('@tanstack/react-start/server', () => ({
   getRequestHeaders: () =>
     new Headers({ 'user-agent': 'Mozilla/5.0 Test', 'x-forwarded-for': '203.0.113.42' }),
 }))
 
 const { handleNewDeviceNotification } = await import('../hooks')
+const { resolveAccountRecipient } = await import('@/lib/server/email/recipient')
+const mockResolveAccountRecipient = vi.mocked(resolveAccountRecipient)
 
 type Ctx = Parameters<typeof handleNewDeviceNotification>[0]
 type Workspace = Parameters<typeof handleNewDeviceNotification>[1]
@@ -119,6 +125,19 @@ describe('handleNewDeviceNotification — happy path', () => {
     expect(mockMarkDeviceSeen).not.toHaveBeenCalled()
     expect(mockForgetDevice).not.toHaveBeenCalled()
   })
+
+  it('skips customer email on OIDC callback but still audits + tracks device', async () => {
+    mockIsDeviceUnseen.mockResolvedValueOnce(true)
+    await handleNewDeviceNotification(
+      buildCtx({ path: '/oauth2/callback/:providerId' }),
+      workspace()
+    )
+
+    expect(mockResolveAccountRecipient).not.toHaveBeenCalled()
+    expect(mockSendNewSignInEmail).not.toHaveBeenCalled()
+    expect(mockRecordAuditEvent).toHaveBeenCalledTimes(1)
+    expect(mockMarkDeviceSeen).toHaveBeenCalledWith('user_abc')
+  })
 })
 
 describe('handleNewDeviceNotification — guards', () => {
@@ -175,10 +194,7 @@ describe('handleNewDeviceNotification — account with no deliverable address', 
     // a contact address an agent may have typed. Marking the device seen still
     // has to happen, or every later sign-in retries a send that can never work.
     mockIsDeviceUnseen.mockResolvedValueOnce(true)
-    const { db } = await import('@/lib/server/db')
-    vi.mocked(db.query.user.findFirst).mockResolvedValueOnce({
-      email: 'sso-oidc-abc-deadbeef@anon.quackback.io',
-    } as never)
+    mockResolveAccountRecipient.mockResolvedValueOnce(null)
 
     await handleNewDeviceNotification(buildCtx(), workspace())
 

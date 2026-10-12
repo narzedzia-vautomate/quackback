@@ -130,6 +130,9 @@ describe('SUPPORTED_LOCALES', () => {
     expect(SUPPORTED_LOCALES).toContain('zh-cn')
     expect(SUPPORTED_LOCALES).toContain('zh-tw')
   })
+  it('includes Czech', () => {
+    expect(SUPPORTED_LOCALES).toContain('cs')
+  })
   it('DEFAULT_LOCALE is en', () => {
     expect(DEFAULT_LOCALE).toBe('en')
   })

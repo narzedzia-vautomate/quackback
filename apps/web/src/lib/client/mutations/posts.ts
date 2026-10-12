@@ -114,7 +114,13 @@ function invalidateRoadmapForStatus(
   })
 }
 
-/** Update a post in all list caches */
+/**
+ * Update a post in all inbox *list* caches.
+ *
+ * Facet-count queries also nest under `inboxKeys.lists()` (so list invalidation
+ * refreshes counts), but they are NOT `InfiniteData` — guard on `pages` so we
+ * don't crash optimistic updates with `Cannot read properties of undefined (reading 'map')`.
+ */
 function updatePostInLists(
   queryClient: ReturnType<typeof useQueryClient>,
   postId: PostId,
@@ -123,12 +129,12 @@ function updatePostInLists(
   queryClient.setQueriesData<InfiniteData<InboxPostListResult>>(
     { queryKey: inboxKeys.lists() },
     (old) => {
-      if (!old) return old
+      if (!old?.pages) return old
       return {
         ...old,
         pages: old.pages.map((page) => ({
           ...page,
-          items: page.items.map((post) => (post.id === postId ? updater(post) : post)),
+          items: (page.items ?? []).map((post) => (post.id === postId ? updater(post) : post)),
         })),
       }
     }
@@ -634,12 +640,13 @@ export function useDeletePost() {
       queryClient.setQueriesData<InfiniteData<InboxPostListResult>>(
         { queryKey: inboxKeys.lists() },
         (old) => {
-          if (!old) return old
+          // Skip facet-count caches nested under inboxKeys.lists().
+          if (!old?.pages) return old
           return {
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              items: page.items.filter((post) => post.id !== postId),
+              items: (page.items ?? []).filter((post) => post.id !== postId),
             })),
           }
         }
@@ -668,12 +675,13 @@ export function useRestorePost() {
       queryClient.setQueriesData<InfiniteData<InboxPostListResult>>(
         { queryKey: inboxKeys.lists() },
         (old) => {
-          if (!old) return old
+          // Skip facet-count caches nested under inboxKeys.lists().
+          if (!old?.pages) return old
           return {
             ...old,
             pages: old.pages.map((page) => ({
               ...page,
-              items: page.items.filter((post) => post.id !== postId),
+              items: (page.items ?? []).filter((post) => post.id !== postId),
             })),
           }
         }

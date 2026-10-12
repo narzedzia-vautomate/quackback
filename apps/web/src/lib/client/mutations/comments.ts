@@ -42,7 +42,7 @@ interface AddCommentInput {
 // Helper Functions
 // ============================================================================
 
-/** Update a post in all list caches */
+/** Update a post in all list caches (skips facet-count caches under lists()). */
 function updatePostInLists(
   queryClient: ReturnType<typeof useQueryClient>,
   postId: PostId,
@@ -51,12 +51,12 @@ function updatePostInLists(
   queryClient.setQueriesData<InfiniteData<InboxPostListResult>>(
     { queryKey: inboxKeys.lists() },
     (old) => {
-      if (!old) return old
+      if (!old?.pages) return old
       return {
         ...old,
         pages: old.pages.map((page) => ({
           ...page,
-          items: page.items.map((post) =>
+          items: (page.items ?? []).map((post) =>
             post.id === postId ? { ...post, ...updater(post) } : post
           ),
         })),

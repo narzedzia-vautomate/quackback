@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import type { Locale } from 'date-fns'
-import {
-  ar,
-  de,
-  enUS,
-  es,
-  fr,
-  pl,
-  ptBR,
-  ru,
-  zhCN,
-  zhTW,
-} from 'date-fns/locale'
+import { ar, cs, de, enUS, es, fr, pl, ptBR, ru, zhCN, zhTW } from 'date-fns/locale'
 import { useIntl } from 'react-intl'
 
 interface TimeAgoProps {
@@ -29,6 +18,7 @@ const DATE_FNS_LOCALES: Record<string, Locale> = {
   ru,
   'pt-br': ptBR,
   pl,
+  cs,
   'zh-cn': zhCN,
   'zh-tw': zhTW,
 }
@@ -40,10 +30,7 @@ function dateFnsLocaleFor(locale: string): Locale {
 
 /** The relative-time label `<TimeAgo>` renders, for static (no-interval)
  *  consumers like CitationFreshness; '' for a missing or invalid date. */
-export function getTimeAgo(
-  date: Date | string | null | undefined,
-  locale: string = 'en'
-): string {
+export function getTimeAgo(date: Date | string | null | undefined, locale: string = 'en'): string {
   if (!date) return ''
   const d = typeof date === 'string' ? new Date(date) : date
   // Check for invalid date

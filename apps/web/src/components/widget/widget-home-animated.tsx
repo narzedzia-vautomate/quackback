@@ -28,7 +28,7 @@ import { useWidgetAuth } from './widget-auth-provider'
 import { sendToHost } from '@/lib/client/widget-bridge'
 import type { PostId } from '@quackback/ids'
 import { RichTextEditor } from '@/components/ui/rich-text-editor'
-import { useWidgetImageUpload } from '@/lib/client/hooks/use-image-upload'
+import { useWidgetImageUpload } from './use-widget-image-upload'
 import type { JSONContent } from '@tiptap/react'
 import type { TiptapContent } from '@/lib/shared/schemas/posts'
 
@@ -64,6 +64,14 @@ interface BoardInfo {
   slug: string
 }
 
+/** Host SDK `quackback:open` → expand the compose form with optional board/title. */
+export type WidgetComposeIntent = {
+  /** Bump to re-apply when the host opens the same board/title again. */
+  id: number
+  boardSlug?: string
+  title?: string
+}
+
 export interface WidgetHomeProps {
   initialPosts: WidgetPost[]
   initialHasMore?: boolean
@@ -79,6 +87,8 @@ export interface WidgetHomeProps {
    */
   boardPermissions?: Record<string, { canSubmit: boolean; canVote: boolean }>
   defaultBoard?: string
+  /** When set (e.g. from SDK `view: 'new-post'`), expand compose and prefill. */
+  composeIntent?: WidgetComposeIntent | null
   onPostSelect?: (postId: string) => void
   onPostCreated?: (post: {
     id: string
@@ -218,6 +228,7 @@ export function WidgetHomeAnimated({
   boards,
   boardPermissions,
   defaultBoard,
+  composeIntent,
   onPostSelect,
   onPostCreated,
 }: WidgetHomeProps) {
@@ -254,6 +265,21 @@ export function WidgetHomeAnimated({
     setContentJson(json)
     setContentHtml(html)
   }, [])
+
+  // Host SDK open({ view: 'new-post', board, title }) — expand + prefill.
+  useEffect(() => {
+    if (!composeIntent) return
+    if (composeIntent.boardSlug) {
+      const match = boards.find((b) => b.slug === composeIntent.boardSlug)
+      if (match) setSelectedBoardId(match.id)
+    }
+    if (typeof composeIntent.title === 'string') {
+      setTitle(composeIntent.title)
+    }
+    setExpanded(true)
+    const t = window.setTimeout(() => inputRef.current?.focus(), 50)
+    return () => window.clearTimeout(t)
+  }, [composeIntent, boards])
 
   // Per-board capability, server-computed for the request actor. The widget
   // route refetches boardPermissions with the Bearer identity (keyed on

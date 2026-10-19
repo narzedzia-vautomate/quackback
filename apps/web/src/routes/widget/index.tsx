@@ -29,6 +29,7 @@ import {
   visibleTabsForVisitor,
 } from '@/components/widget/widget-nav'
 import { WidgetHome } from '@/components/widget/widget-home'
+import type { WidgetComposeIntent } from '@/components/widget/widget-home-animated'
 import { WidgetOverview } from '@/components/widget/widget-overview'
 import { WidgetHeroBackdrop } from '@/components/widget/widget-hero-backdrop'
 import type { ConversationId } from '@quackback/ids'
@@ -439,6 +440,8 @@ function WidgetPage() {
   const [conversationTarget, setConversationTarget] = useState<ConversationId | 'new' | null>(
     resumeConversationId ? (resumeConversationId as ConversationId) : null
   )
+  // Host SDK `open({ view: 'new-post', board?, title? })` → expand compose.
+  const [composeIntent, setComposeIntent] = useState<WidgetComposeIntent | null>(null)
   // Manual size preference: the header's expand/collapse button flips this,
   // and it is STICKY — collapsing turns auto-expansion off for every later
   // item view until the visitor expands again. Persisted per browser.
@@ -572,7 +575,11 @@ function WidgetPage() {
       }
       if (msg.type !== 'quackback:open' || !msg.data) return
 
-      const opts = msg.data as { view?: string }
+      const opts = msg.data as {
+        view?: string
+        title?: string
+        board?: string
+      }
       // SDK-driven opens are tab-level landings: no back-chevron origin.
       setBackTarget(null)
       lastNavRef.current = 'tab'
@@ -605,6 +612,16 @@ function WidgetPage() {
       } else if ((opts.view === 'home' || opts.view === 'overview') && homeEnabled(tabs)) {
         setActiveTab('home')
         setView('overview')
+      } else if ((opts.view === 'new-post' || opts.view === 'feedback') && tabs.feedback) {
+        // Host SDK deep-link: expand compose with optional board slug + title.
+        setComposeIntent({
+          id: Date.now(),
+          boardSlug: typeof opts.board === 'string' ? opts.board : undefined,
+          title: typeof opts.title === 'string' ? opts.title : undefined,
+        })
+        setSelectedPostId(null)
+        setActiveTab('feedback')
+        setView('feedback')
       }
     }
     window.addEventListener('message', handleMessage)
@@ -1046,6 +1063,7 @@ function WidgetPage() {
             boards={boards}
             boardPermissions={livePermissions}
             defaultBoard={defaultBoard}
+            composeIntent={composeIntent}
             onPostSelect={handlePostSelect}
             onPostCreated={handlePostCreated}
           />

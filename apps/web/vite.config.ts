@@ -93,6 +93,31 @@ function keepSsrOnlyDepsOutOfClientOptimizer(): PluginOption {
 }
 
 /**
+ * Dev only: Vite's static/asset stack answers unfound paths with a 404 HTML
+ * page when the browser sends `Sec-Fetch-Dest: image` (what `<img>` always
+ * sends) — *before* TanStack/Nitro can serve `/api/storage/*`. curl/fetch
+ * omit that header so they hit the real handler; pasted images look broken.
+ * Stripping the header for storage GETs lets the request fall through. Prod
+ * Bun has no Vite static gate, so this is serve-only.
+ */
+function passStoragePastViteAssetGate(): PluginOption {
+  return {
+    name: 'quackback:pass-storage-past-vite-asset-gate',
+    apply: 'serve',
+    configureServer(server) {
+      // Register synchronously so we run before Vite's static middleware.
+      server.middlewares.use((req, _res, next) => {
+        const pathname = (req.url ?? '').split('?')[0] ?? ''
+        if (pathname.startsWith('/api/storage/') && req.headers['sec-fetch-dest']) {
+          delete req.headers['sec-fetch-dest']
+        }
+        next()
+      })
+    },
+  }
+}
+
+/**
  * Dev only: Vite's static middleware answers `/api/widget/sdk.js` with
  * `Cannot GET` before TanStack/Nitro can handle the route — and rewriting to
  * `sdk%2Ejs` still races Nitro during dep-optimize (503 / wedged HTTP).
@@ -197,6 +222,7 @@ export default defineConfig(({ mode }) => {
       tsconfigPaths: true,
     },
     plugins: [
+      passStoragePastViteAssetGate(),
       serveWidgetSdkJsInDev(),
       keepSsrOnlyDepsOutOfClientOptimizer(),
       stubServerLoggerInClient(),

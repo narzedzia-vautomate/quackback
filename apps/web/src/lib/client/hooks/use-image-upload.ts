@@ -93,6 +93,11 @@ export function usePortalImageUpload(
   return useImageUpload({ ...options, endpoint: '/api/portal/upload' })
 }
 
+/**
+ * Raw widget upload (Bearer headers only). Prefer
+ * `@/components/widget/use-widget-image-upload` in widget UI so a session is
+ * minted before POST — same as vote/comment/post.
+ */
 export function useWidgetImageUpload(
   options: Omit<UseImageUploadOptions, 'prefix' | 'endpoint' | 'extraHeaders'> = {}
 ) {

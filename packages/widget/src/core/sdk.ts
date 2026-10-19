@@ -55,6 +55,12 @@ export function createSDK(): SDK {
   // `pendingIdentifyPresent` distinguishes "nothing queued" from "logout queued".
   let pendingIdentify: unknown = null
   let pendingIdentifyPresent = false
+  // Last identity successfully queued/sent — re-pushed on every `quackback:ready`
+  // so an iframe reload (src rewrite, HMR, crash recovery) gets a session again.
+  // Without this, paste/upload 401s after reload because `_widgetToken` is
+  // in-memory only inside the iframe.
+  let lastIdentity: unknown = null
+  let hasLastIdentity = false
   let pendingOpen: OpenOptions | null = null
   let panelOpen = false
   let currentUser: WidgetUser | null = null
@@ -83,6 +89,8 @@ export function createSDK(): SDK {
           bridge!.send('quackback:identify', pendingIdentify)
           pendingIdentifyPresent = false
           pendingIdentify = null
+        } else if (hasLastIdentity) {
+          bridge!.send('quackback:identify', lastIdentity)
         }
         if (config?.locale) bridge!.send('quackback:locale', config.locale)
         if (metadata) bridge!.send('quackback:metadata', metadata)
@@ -208,6 +216,8 @@ export function createSDK(): SDK {
   }
 
   function sendIdentity(data: unknown) {
+    lastIdentity = data
+    hasLastIdentity = true
     if (ready && bridge) bridge.send('quackback:identify', data)
     else {
       pendingIdentify = data
@@ -411,6 +421,8 @@ export function createSDK(): SDK {
         metadata = null
         pendingIdentify = null
         pendingIdentifyPresent = false
+        lastIdentity = null
+        hasLastIdentity = false
         pendingOpen = null
         panelOpen = false
         currentUser = null

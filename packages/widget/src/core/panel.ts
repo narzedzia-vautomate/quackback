@@ -52,7 +52,8 @@ export function createPanel(opts: PanelOptions): PanelHandle {
     'sandbox',
     'allow-scripts allow-forms allow-same-origin allow-popups allow-downloads'
   )
-  iframe.setAttribute('allow', 'clipboard-write')
+  // clipboard-read: paste screenshots into the compose editor (parent ≠ iframe origin).
+  iframe.setAttribute('allow', 'clipboard-write; clipboard-read')
   iframe.className = 'quackback-widget-iframe'
   panel.appendChild(iframe)
 

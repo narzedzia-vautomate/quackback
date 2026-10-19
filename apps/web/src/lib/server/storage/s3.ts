@@ -638,6 +638,8 @@ const PUBLIC_STORAGE_PREFIXES = new Set([
   'portal-og',
   'portal-welcome',
   'post-images',
+  // Widget compose / messenger screenshots (paste & upload).
+  'widget-images',
   'widget-hero',
 ])
 

@@ -1660,15 +1660,73 @@ function handleImageDrop(
   }
 }
 
+/** Clipboard / parsed-slice image srcs that cannot load inside a cross-origin iframe. */
+function isEphemeralImageSrc(src: unknown): boolean {
+  if (typeof src !== 'string' || !src) return true
+  return /^(blob:|data:|webkit-fake-url:|x-apple-pasteboard:|filesystem:|file:)/i.test(src)
+}
+
+function sliceHasEphemeralImage(slice: unknown): boolean {
+  const content = (
+    slice as {
+      content?: {
+        descendants?: (
+          f: (node: { type: { name: string }; attrs: Record<string, unknown> }) => boolean | void
+        ) => void
+      }
+    }
+  )?.content
+  if (!content?.descendants) return false
+  let found = false
+  content.descendants((node) => {
+    if (found) return false
+    if (
+      (node.type.name === 'image' || node.type.name === 'resizableImage') &&
+      isEphemeralImageSrc(node.attrs.src)
+    ) {
+      found = true
+      return false
+    }
+  })
+  return found
+}
+
 /**
  * Handle image paste events in the editor.
+ *
+ * Prefer real image files from the clipboard. Block HTML / ProseMirror-slice
+ * pastes that only carry ephemeral <img> srcs (blob:/data:/file:…) — those
+ * resolve in the host page but break inside a cross-origin widget iframe.
  */
 function handleImagePaste(
   onImageUpload: (file: File) => Promise<string>
 ): (view: import('@tiptap/pm/view').EditorView, event: ClipboardEvent, slice: unknown) => boolean {
-  return (view, event) => {
+  return (view, event, slice) => {
     const items = Array.from(event.clipboardData?.items ?? [])
-    const images = items.filter((item) => item.type.startsWith('image/'))
+    const fromItems = items
+      .filter((item) => item.type.startsWith('image/'))
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => !!file)
+    const fromFiles = Array.from(event.clipboardData?.files ?? []).filter((file) =>
+      file.type.startsWith('image/')
+    )
+    const images = fromItems.length > 0 ? fromItems : fromFiles
+
+    const html = event.clipboardData?.getData('text/html') ?? ''
+    const htmlHasEphemeralImg =
+      /<img\b[^>]*\bsrc=["']?(?:blob:|data:|webkit-fake-url:|x-apple-pasteboard:|filesystem:|file:)/i.test(
+        html
+      )
+    const ephemeralOnly =
+      images.length === 0 && (htmlHasEphemeralImg || sliceHasEphemeralImage(slice))
+
+    if (ephemeralOnly) {
+      event.preventDefault()
+      void import('sonner').then(({ toast }) =>
+        toast.error("Couldn't paste that image. Try Upload or drag & drop.")
+      )
+      return true
+    }
 
     if (images.length === 0) {
       return false
@@ -1676,10 +1734,7 @@ function handleImagePaste(
 
     event.preventDefault()
 
-    images.forEach((item) => {
-      const file = item.getAsFile()
-      if (!file) return
-
+    images.forEach((file) => {
       onImageUpload(file)
         .then((src) => {
           const { schema } = view.state

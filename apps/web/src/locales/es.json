@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "Publicando en",
   "widget.home.posting.postingAs": "Publicando como {name}",
   "widget.home.posting.postingAnonymously": "Publicando de forma anónima",
+  "widget.home.posting.signInRequired": "Inicia sesión para publicar en esta categoría",
   "widget.home.posting.emailRequired": "Tu correo electrónico es obligatorio",
   "widget.home.form.emailPlaceholder": "Tu correo electrónico",
   "widget.home.form.namePlaceholder": "Nombre (opcional)",

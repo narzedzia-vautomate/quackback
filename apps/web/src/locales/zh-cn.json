@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "发布到",
   "widget.home.posting.postingAs": "以 {name} 身份发布",
   "widget.home.posting.postingAnonymously": "匿名发布",
+  "widget.home.posting.signInRequired": "登录后才能在此看板发帖",
   "widget.home.posting.emailRequired": "请填写你的邮箱",
   "widget.home.form.emailPlaceholder": "你的邮箱",
   "widget.home.form.namePlaceholder": "姓名（选填）",

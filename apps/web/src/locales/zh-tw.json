@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "發佈至",
   "widget.home.posting.postingAs": "以 {name} 的身分發佈",
   "widget.home.posting.postingAnonymously": "以匿名身分發佈",
+  "widget.home.posting.signInRequired": "登入後才能在此看板發佈",
   "widget.home.posting.emailRequired": "需要填寫你的電子郵件",
   "widget.home.form.emailPlaceholder": "你的電子郵件",
   "widget.home.form.namePlaceholder": "名稱（選填）",

@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "تنشر في",
   "widget.home.posting.postingAs": "تنشر باسم {name}",
   "widget.home.posting.postingAnonymously": "تنشر بشكل مجهول",
+  "widget.home.posting.signInRequired": "سجّل الدخول للنشر على هذا اللوح",
   "widget.home.posting.emailRequired": "بريدك الإلكتروني مطلوب",
   "widget.home.form.emailPlaceholder": "بريدك الإلكتروني",
   "widget.home.form.namePlaceholder": "الاسم (اختياري)",

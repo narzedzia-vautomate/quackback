@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "В категории",
   "widget.home.posting.postingAs": "Вы публикуете как {name}",
   "widget.home.posting.postingAnonymously": "Анонимно",
+  "widget.home.posting.signInRequired": "Войдите, чтобы опубликовать на этой доске",
   "widget.home.posting.emailRequired": "Укажите email",
   "widget.home.form.emailPlaceholder": "Ваш email",
   "widget.home.form.namePlaceholder": "Имя (необязательно)",

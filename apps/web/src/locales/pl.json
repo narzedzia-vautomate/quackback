@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "Publikujesz na",
   "widget.home.posting.postingAs": "Publikujesz jako {name}",
   "widget.home.posting.postingAnonymously": "Publikujesz anonimowo",
+  "widget.home.posting.signInRequired": "Zaloguj się, aby opublikować na tej tablicy",
   "widget.home.posting.emailRequired": "Adres e-mail jest wymagany",
   "widget.home.form.emailPlaceholder": "Twój e-mail",
   "widget.home.form.namePlaceholder": "Imię (opcjonalnie)",

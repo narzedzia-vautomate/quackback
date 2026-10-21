@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "Zveřejňujete na",
   "widget.home.posting.postingAs": "Zveřejňujete jako {name}",
   "widget.home.posting.postingAnonymously": "Zveřejňujete anonymně",
+  "widget.home.posting.signInRequired": "Pro zveřejnění na této nástěnce se přihlaste",
   "widget.home.posting.emailRequired": "E-mailová adresa je povinná",
   "widget.home.form.emailPlaceholder": "Váš e-mail",
   "widget.home.form.namePlaceholder": "Jméno (nepovinné)",

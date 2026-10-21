@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "Posting to",
   "widget.home.posting.postingAs": "Posting as {name}",
   "widget.home.posting.postingAnonymously": "Posting anonymously",
+  "widget.home.posting.signInRequired": "Sign in to post on this board",
   "widget.home.posting.emailRequired": "Your email is required",
   "widget.home.form.emailPlaceholder": "Your email",
   "widget.home.form.namePlaceholder": "Name (optional)",

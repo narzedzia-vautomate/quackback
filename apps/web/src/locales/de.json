@@ -38,6 +38,7 @@
   "widget.home.posting.postingTo": "Posten in",
   "widget.home.posting.postingAs": "Sie posten als {name}",
   "widget.home.posting.postingAnonymously": "Sie posten anonym",
+  "widget.home.posting.signInRequired": "Melden Sie sich an, um in dieser Kategorie zu posten",
   "widget.home.posting.emailRequired": "Ihre E-Mail-Adresse ist erforderlich",
   "widget.home.form.emailPlaceholder": "Ihre E-Mail-Adresse",
   "widget.home.form.namePlaceholder": "Name (optional)",
